@@ -1,0 +1,111 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #26734d;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+}
+h1 {
+  margin-top: 24px;
+  margin-bottom: 10px;
+}
+#game-container {
+  background: #184d33;
+  border-radius: 15px;
+  box-shadow: 0 2px 12px #111a;
+  padding: 20px 10px 20px 10px;
+  max-width: 98vw;
+  box-sizing: border-box;
+}
+#pool-table {
+  background: #226644;
+  display: block;
+  margin: 0 auto;
+  border: 8px solid #654321;
+  border-radius: 10px;
+  max-width: 98vw;
+  height: auto;
+  touch-action: none;
+}
+#controls {
+  margin-top: 10px;
+  text-align: center;
+}
+#reset-btn {
+  background: #ff8800;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 1rem;
+  padding: 8px 16px;
+  margin-right: 25px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#reset-btn:hover {
+  background: #ffaa00;
+}
+#message {
+  font-size: 1.1rem;
+  color: #fff;
+}
+#player-profiles {
+  display: flex;
+  justify-content: space-around;
+  gap: 2vw;
+  margin-bottom: 10px;
+  width: 100%;
+  max-width: 800px;
+}
+.player-profile {
+  background: #143;
+  border-radius: 10px;
+  padding: 10px;
+  flex: 1;
+  min-width: 0;
+  margin: 0 2px;
+  border: 2px solid #164;
+}
+.player-profile.active {
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 10px #ff0;
+}
+.player-profile-name {
+  font-weight: bold;
+  font-size: 1.15em;
+  margin-bottom: 7px;
+}
+.player-profile-balls {
+  min-height: 25px;
+}
+.player-profile-balls span {
+  display: inline-block;
+  margin: 0 2px 3px 2px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: #fff;
+  color: #222;
+  font-weight: bold;
+}
+@media (max-width: 850px) {
+  #pool-table {
+    width: 98vw !important;
+    height: 49vw !important;
+    max-width: 98vw;
+    max-height: 55vw;
+  }
+  #game-container {
+    padding: 2vw 1vw 2vw 1vw;
+    max-width: 99vw;
+  }
+  h1 {
+    font-size: 1.25rem;
+  }
+  #player-profiles {
+    font-size: 0.95em;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
