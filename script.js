@@ -86,22 +86,60 @@ function showStartMessage() {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
   ctx.fillStyle = "#226644";
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+  // Sombra na caixa central
+  ctx.save();
+  ctx.globalAlpha = 0.20;
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.ellipse(WIDTH / 2, HEIGHT / 2 + 90, 220, 50, 0, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.restore();
+
+  // Caixa central do aviso
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = "#184d33";
+  ctx.strokeStyle = "#ffe66d";
+  ctx.lineWidth = 5;
+  ctx.roundRect(WIDTH/2-240, HEIGHT/2-82, 480, 175, 28);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
   ctx.font = "bold 30px Arial";
   ctx.fillStyle = "#fff";
   ctx.textAlign = "center";
   ctx.fillText("Bem-vindo ao Jogo de Sinuca!", WIDTH / 2, HEIGHT / 2 - 50);
-  ctx.font = "bold 22px Arial";
-  ctx.fillStyle = "#ffd700";
-  ctx.fillText("Jogador 1: Bolas ÍMPARES (1,3,5,7,9,11,13,15)", WIDTH / 2, HEIGHT / 2);
-  ctx.fillStyle = "#00bfff";
-  ctx.fillText("Computador: Bolas PARES (2,4,6,8,10,12,14)", WIDTH / 2, HEIGHT / 2 + 40);
+  ctx.font = "bold 21px Arial";
+  ctx.fillStyle = "#ffe66d";
+  ctx.fillText("Jogador 1: Bolas ÍMPARES (1,3,5,7,9,11,13,15)", WIDTH / 2, HEIGHT / 2 - 10);
+  ctx.fillStyle = "#75d2ff";
+  ctx.fillText("Computador: Bolas PARES (2,4,6,8,10,12,14)", WIDTH / 2, HEIGHT / 2 + 23);
   ctx.font = "18px Arial";
   ctx.fillStyle = "#fff";
-  ctx.fillText("Puxe o taco para trás e solte para tacar!", WIDTH / 2, HEIGHT / 2 + 70);
-  ctx.fillText("Toque e deslize para jogar no celular!", WIDTH / 2, HEIGHT / 2 + 100);
-  ctx.fillText("Toque para começar!", WIDTH / 2, HEIGHT / 2 + 130);
+  ctx.fillText("Puxe o taco para trás e solte para tacar!", WIDTH / 2, HEIGHT / 2 + 57);
+  ctx.fillStyle = "#ffe66d";
+  ctx.fillText("Toque para começar!", WIDTH / 2, HEIGHT / 2 + 86);
   document.getElementById('message').textContent = "";
   atualizarPerfilJogadores();
+}
+
+// Forçar rotação landscape em mobile
+function requestLandscape() {
+  if (window.screen.orientation && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    try {
+      if (screen.orientation.type.indexOf('landscape') === -1) {
+        screen.orientation.lock('landscape').catch(() => {
+          if (canvas.requestFullscreen) {
+            canvas.requestFullscreen().then(() => {
+              screen.orientation.lock('landscape').catch(()=>{});
+            });
+          }
+        });
+      }
+    } catch (e) {}
+  }
 }
 
 function Ball(x, y, color, number, isCue=false) {
@@ -167,11 +205,27 @@ function shuffle(arr) {
 }
 
 function drawTable() {
-  ctx.fillStyle = "#111";
+  // Sombra na mesa
+  ctx.save();
+  ctx.shadowColor = "#1b3c24";
+  ctx.shadowBlur = 38;
+  ctx.fillStyle = "#226644";
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+  ctx.restore();
+
+  // Pockets com gradient e blur
   for (let p of POCKETS) {
+    let grad = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, POCKET_RADIUS);
+    grad.addColorStop(0, "#000");
+    grad.addColorStop(0.6, "#333c");
+    grad.addColorStop(1, "#0000");
     ctx.beginPath();
     ctx.arc(p.x, p.y, POCKET_RADIUS, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.shadowBlur = 13;
+    ctx.shadowColor = "#000";
     ctx.fill();
+    ctx.shadowBlur = 0;
   }
 }
 
@@ -181,22 +235,35 @@ function drawBalls() {
   ctx.textBaseline = "middle";
   for (let b of balls) {
     if (b.inPocket) continue;
+    // Bola
+    ctx.save();
+    let grad = ctx.createRadialGradient(b.x - 6, b.y - 7, 2, b.x, b.y, BALL_RADIUS * 1.15);
+    grad.addColorStop(0, "#fff");
+    grad.addColorStop(0.18, "#fff9");
+    grad.addColorStop(0.37, b.color);
+    grad.addColorStop(1, "#222");
     ctx.beginPath();
     ctx.arc(b.x, b.y, BALL_RADIUS, 0, Math.PI * 2);
-    ctx.fillStyle = b.color;
-    ctx.shadowColor = "#222";
-    ctx.shadowBlur = 8;
+    ctx.fillStyle = grad;
+    ctx.shadowColor = "#0009";
+    ctx.shadowBlur = 6;
     ctx.fill();
     ctx.shadowBlur = 0;
     ctx.strokeStyle = "#222";
     ctx.lineWidth = 2;
     ctx.stroke();
+    // Número
     if (!b.isCue) {
       ctx.beginPath();
-      ctx.arc(b.x, b.y, BALL_RADIUS * 0.55, 0, Math.PI * 2);
+      ctx.arc(b.x, b.y, BALL_RADIUS * 0.56, 0, Math.PI * 2);
       ctx.fillStyle = "#fff";
+      ctx.globalAlpha = 0.92;
       ctx.fill();
-      ctx.fillStyle = (b.number === 8) ? "#fff" : "#111";
+      ctx.globalAlpha = 1.0;
+      ctx.lineWidth = 1.3;
+      ctx.strokeStyle = "#eee";
+      ctx.stroke();
+      ctx.fillStyle = (b.number === 8) ? "#fff" : "#222";
       ctx.font = "bold 13px Arial";
       ctx.fillText(b.number, b.x, b.y);
     }
@@ -204,7 +271,15 @@ function drawBalls() {
       ctx.strokeStyle = "#bbb";
       ctx.lineWidth = 3;
       ctx.stroke();
+      // brilho na branca
+      ctx.beginPath();
+      ctx.arc(b.x - 5, b.y - 4, 3, 0, Math.PI * 2);
+      ctx.fillStyle = "#fff9";
+      ctx.globalAlpha = 0.6;
+      ctx.fill();
+      ctx.globalAlpha = 1.0;
     }
+    ctx.restore();
   }
 }
 
@@ -213,9 +288,11 @@ function drawAimLine() {
     let dist = Math.sqrt(Math.pow(aimEnd.x - aimStart.x, 2) + Math.pow(aimEnd.y - aimStart.y, 2));
     if (dist > MIN_CUE_DIST) {
       ctx.save();
-      ctx.strokeStyle = "#fff";
+      ctx.strokeStyle = "#ffe66d";
       ctx.setLineDash([6, 8]);
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.2;
+      ctx.shadowBlur = 4;
+      ctx.shadowColor = "#ffe66d";
       ctx.beginPath();
       ctx.moveTo(aimStart.x, aimStart.y);
       ctx.lineTo(aimEnd.x, aimEnd.y);
@@ -239,15 +316,25 @@ function drawCue() {
   let endX = cueBall.x - Math.cos(angle) * cueEndDist;
   let endY = cueBall.y - Math.sin(angle) * cueEndDist;
   ctx.save();
-  ctx.strokeStyle = "#d4996a";
+  // Taco
+  let grad = ctx.createLinearGradient(startX, startY, endX, endY);
+  grad.addColorStop(0, "#f3e0c5");
+  grad.addColorStop(0.25, "#d4996a");
+  grad.addColorStop(0.7, "#d4996a");
+  grad.addColorStop(1, "#b5772f");
+  ctx.strokeStyle = grad;
   ctx.lineWidth = CUE_WIDTH;
   ctx.lineCap = "round";
+  ctx.shadowBlur = 5;
+  ctx.shadowColor = "#664422";
   ctx.beginPath();
   ctx.moveTo(startX, startY);
   ctx.lineTo(endX, endY);
   ctx.stroke();
+  // Ponta azul
   ctx.strokeStyle = "#2299ee";
   ctx.lineWidth = CUE_WIDTH - 2;
+  ctx.shadowBlur = 0;
   ctx.beginPath();
   ctx.moveTo(startX, startY);
   ctx.lineTo(startX - Math.cos(angle) * 12, startY - Math.sin(angle) * 12);
@@ -400,9 +487,9 @@ function processTurn() {
 
   if (gameOver) return;
 
-  // Atribuir bolas encaçapadas ao jogador da vez
+  // Atribuir bolas encaçapadas ao jogador da vez (apenas se forem do tipo dele)
   for (let b of lastPocketed) {
-    if (b.number >= 1 && b.number <= 15) {
+    if (b.number >= 1 && b.number <= 15 && isPlayerBall(b, playerType[currentPlayer])) {
       if (!jogadores[currentPlayer-1].bolas.includes(b.number)) {
         jogadores[currentPlayer-1].bolas.push(b.number);
       }
@@ -426,7 +513,7 @@ function processTurn() {
   }
 }
 
-// --- IA MELHORADA ---
+// --- IA MELHORADA (apenas bolas pares para o Comp.) ---
 function iaComputadorJoga() {
   let meuTipo = "par";
   let bolasAlvo = balls.filter(b => !b.inPocket && !b.isCue && isPlayerBall(b, meuTipo));
@@ -435,30 +522,24 @@ function iaComputadorJoga() {
   }
   if (bolasAlvo.length === 0) return;
 
-  // Busca a melhor combinação bola/par de buraco com menor ângulo de entrada viável e caminho livre
   let melhor = null;
   let melhorScore = -Infinity;
 
   for (let bola of bolasAlvo) {
     for (let pocket of POCKETS) {
-      // Calcula ângulo entre bola-alvo e buraco
       let vx = pocket.x - bola.x;
       let vy = pocket.y - bola.y;
       let distAlvoBuraco = Math.sqrt(vx * vx + vy * vy);
 
-      // Posição ideal para a branca atingir a bola (ponto tangente atrás da bola em direção ao buraco)
       let px = bola.x - (vx / distAlvoBuraco) * BALL_RADIUS * 2;
       let py = bola.y - (vy / distAlvoBuraco) * BALL_RADIUS * 2;
 
-      // Distância da branca ao ponto de impacto
       let dx = px - cueBall.x;
       let dy = py - cueBall.y;
       let distBrancaAlvo = Math.sqrt(dx * dx + dy * dy);
 
-      // Penalidade se a branca está muito longe ou atrás da bola
       let score = -distBrancaAlvo - distAlvoBuraco * 0.5;
 
-      // Checa se há bola entre a branca e o alvo (colisão prematura): simples raycast
       let colisao = false;
       for (let ob of balls) {
         if (ob === cueBall || ob === bola || ob.inPocket) continue;
@@ -470,9 +551,8 @@ function iaComputadorJoga() {
           if (dd < BALL_RADIUS * 2) colisao = true;
         }
       }
-      if (colisao) score -= 1000; // evita bolas bloqueadas
+      if (colisao) score -= 1000;
 
-      // Pequeno random pra não ser impossível de ganhar
       score += Math.random() * 10;
 
       if (score > melhorScore) {
@@ -483,13 +563,11 @@ function iaComputadorJoga() {
   }
   if (!melhor) return;
 
-  // Mira com mira levemente imprecisa
   let dx = melhor.px - cueBall.x;
   let dy = melhor.py - cueBall.y;
   let dist = Math.sqrt(dx * dx + dy * dy);
   let force = Math.max(10, Math.min(20, dist / 8 + melhor.distAlvoBuraco / 14 + 3 + Math.random()*2));
-  // Erro proposital para não ser impossível
-  let erro = (Math.random() - 0.5) * 0.15; // até 9 graus de erro
+  let erro = (Math.random() - 0.5) * 0.15;
   let ang = Math.atan2(dy, dx) + erro;
   cueBall.vx = Math.cos(ang) * force;
   cueBall.vy = Math.sin(ang) * force;
@@ -520,6 +598,7 @@ canvas.addEventListener('touchend', pointerEnd, false);
 function pointerStart(e) {
   if (!gameStarted) {
     gameStarted = true;
+    requestLandscape();
     resetGame();
     return;
   }
@@ -579,16 +658,21 @@ document.getElementById('reset-btn').onclick = () => {
   showStartMessage();
 };
 
+// Numerador funcional de bolas encaçapadas
 function atualizarPerfilJogadores() {
   let div = document.getElementById("player-profiles");
   if (!div) return;
   div.innerHTML = "";
   jogadores.forEach((jogador, idx) => {
+    // Conta bolas do tipo certo para cada jogador
+    const tipo = idx === 0 ? "impar" : "par";
+    const total = 7;
+    const encaçapadas = jogador.bolas.filter(bn => isPlayerBall({number: bn}, tipo)).length;
     let perfil = document.createElement("div");
     perfil.className = "player-profile" + (currentPlayer-1 === idx ? " active" : "");
     perfil.innerHTML = `
       <div class="player-profile-name" style="color:${jogador.cor};">${jogador.nome}${currentPlayer-1 === idx ? " <span style='font-size:.9em;'>(Vez)</span>" : ""}</div>
-      <div style="color:#fff;margin-bottom:4px;"><b>Bolas encaçapadas:</b></div>
+      <div style="color:#fff;margin-bottom:4px;"><b>Bolas encaçapadas: ${encaçapadas} de 7</b></div>
       <div class="player-profile-balls">
         ${jogador.bolas.length > 0 ? jogador.bolas.sort((a,b)=>a-b).map(n=>`<span>${n}</span>`).join(" ") : "<span style='color:#888;'>Nenhuma</span>"}
       </div>
